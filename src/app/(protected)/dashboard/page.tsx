@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WorldMap } from "@/components/world-map";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -10,52 +10,20 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
-  return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
-      <h1 className="mb-6 text-3xl font-bold">Dashboard</h1>
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Signed in as
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="truncate text-sm font-semibold">{user.email}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Account created
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm font-semibold">
-              {new Date(user.created_at).toLocaleDateString()}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-              Active
-            </span>
-          </CardContent>
-        </Card>
-      </div>
+  const { data: visited } = await supabase
+    .from("visited_countries")
+    .select("country_code")
+    .eq("user_id", user.id);
 
-      {/* ── Add your idea's UI below this line ── */}
-      <div className="mt-8">
-        <p className="text-muted-foreground">
-          Your app content goes here. Start building!
-        </p>
-      </div>
+  const visitedCodes = (visited ?? []).map((r) => r.country_code);
+
+  return (
+    <div className="container mx-auto max-w-5xl px-4 py-8">
+      <h1 className="mb-2 text-3xl font-bold">My Travel Map</h1>
+      <p className="mb-6 text-muted-foreground">
+        Click any country to mark it as visited.
+      </p>
+      <WorldMap visitedCodes={visitedCodes} />
     </div>
   );
 }
